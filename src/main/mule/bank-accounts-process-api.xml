@@ -2,8 +2,12 @@
 <mule xmlns="http://www.mulesoft.org/schema/mule/core"
   xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
   xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+  xmlns:anypoint-mq="http://www.mulesoft.org/schema/mule/anypoint-mq"
+  xmlns:http="http://www.mulesoft.org/schema/mule/http"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+      http://www.mulesoft.org/schema/mule/anypoint-mq http://www.mulesoft.org/schema/mule/anypoint-mq/current/mule-anypoint-mq.xsd
+      http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
       http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
 
   <!-- GET /accounts - Business Logic Flow -->
@@ -267,6 +271,162 @@ output application/json
     </ee:transform>
 
     <http:response statusCode="202" doc:name="HTTP Response"/>
+  </flow>
+
+  <!-- MQ Listener: Consume Account Updates from Accounts Queue -->
+  <flow name="consume-account-update-from-mq" doc:name="consume-account-update-from-mq">
+    <anypoint-mq:consume doc:name="Consume from Accounts Queue" config-ref="Anypoint_MQ_Config" destination="Accounts Queue">
+      <anypoint-mq:maximum-messages>1</anypoint-mq:maximum-messages>
+    </anypoint-mq:consume>
+    
+    <logger level="INFO" message="Received account update from MQ: #[payload]" doc:name="Log Account Update"/>
+    
+    <try doc:name="Try">
+      <ee:transform doc:name="Transform MQ Message to Account Format">
+        <ee:message>
+          <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var msg = payload
+---
+{
+  globalId: null,
+  accountNumber: msg.accountNumber,
+  accountType: msg.accountType,
+  accountName: msg.accountName,
+  balance: msg.balance default 0.00,
+  status: msg.status default "Active",
+  externalIds: [{
+    system: "Salesforce",
+    value: msg.accountId
+  }]
+}]]></ee:set-payload>
+        </ee:message>
+      </ee:transform>
+
+      <http:request method="POST" config-ref="Global_Financial_Account_System_API_Config" path="/api/global/accounts" doc:name="Upsert Account to Global Data">
+        <http:body><![CDATA[#[payload]]]></http:body>
+      </http:request>
+
+      <http:request method="POST" config-ref="Salesforce_Financial_System_API_Config" path="/api/salesforce/financial/accounts" doc:name="Upsert Account to Salesforce">
+        <http:body><![CDATA[#[payload]]]></http:body>
+      </http:request>
+
+      <logger level="INFO" message="Successfully processed account update from MQ" doc:name="Log Success"/>
+
+      <error-handler>
+        <on-error-continue type="ANYPOINT-MQ:CONSUME,HTTP:REQUEST" enableNotifications="true" logException="true" doc:name="Continue on Error">
+          <logger level="ERROR" message="Error processing account update from MQ: #[error.description]" doc:name="Log Error"/>
+        </on-error-continue>
+      </error-handler>
+    </try>
+  </flow>
+
+  <!-- MQ Listener: Consume Transaction Updates from Transactions Queue -->
+  <flow name="consume-transaction-update-from-mq" doc:name="consume-transaction-update-from-mq">
+    <anypoint-mq:consume doc:name="Consume from Transactions Queue" config-ref="Anypoint_MQ_Config" destination="Transactions Queue">
+      <anypoint-mq:maximum-messages>1</anypoint-mq:maximum-messages>
+    </anypoint-mq:consume>
+    
+    <logger level="INFO" message="Received transaction update from MQ: #[payload]" doc:name="Log Transaction Update"/>
+    
+    <try doc:name="Try">
+      <ee:transform doc:name="Transform MQ Message to Transaction Format">
+        <ee:message>
+          <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var msg = payload
+---
+{
+  globalId: null,
+  transactionNumber: msg.transactionNumber,
+  transactionType: msg.transactionType,
+  amount: msg.amount default 0.00,
+  currency: msg.currency default "USD",
+  description: msg.description,
+  status: msg.status default "Posted",
+  transactionDate: msg.transactionDate default now(),
+  externalIds: [{
+    system: "Salesforce",
+    value: msg.transactionId
+  }]
+}]]></ee:set-payload>
+        </ee:message>
+      </ee:transform>
+
+      <http:request method="POST" config-ref="Global_Financial_Account_System_API_Config" path="/api/global/accounts/transactions" doc:name="Upsert Transaction to Global Data">
+        <http:body><![CDATA[#[payload]]]></http:body>
+      </http:request>
+
+      <http:request method="POST" config-ref="Salesforce_Financial_System_API_Config" path="/api/salesforce/financial/transactions" doc:name="Upsert Transaction to Salesforce">
+        <http:body><![CDATA[#[payload]]]></http:body>
+      </http:request>
+
+      <logger level="INFO" message="Successfully processed transaction update from MQ" doc:name="Log Success"/>
+
+      <error-handler>
+        <on-error-continue type="ANYPOINT-MQ:CONSUME,HTTP:REQUEST" enableNotifications="true" logException="true" doc:name="Continue on Error">
+          <logger level="ERROR" message="Error processing transaction update from MQ: #[error.description]" doc:name="Log Error"/>
+        </on-error-continue>
+      </error-handler>
+    </try>
+  </flow>
+
+  <!-- MQ Listener: Consume Card Updates from Cards Queue -->
+  <flow name="consume-card-update-from-mq" doc:name="consume-card-update-from-mq">
+    <anypoint-mq:consume doc:name="Consume from Cards Queue" config-ref="Anypoint_MQ_Config" destination="Cards Queue">
+      <anypoint-mq:maximum-messages>1</anypoint-mq:maximum-messages>
+    </anypoint-mq:consume>
+    
+    <logger level="INFO" message="Received card update from MQ: #[payload]" doc:name="Log Card Update"/>
+    
+    <try doc:name="Try">
+      <ee:transform doc:name="Transform MQ Message to Card Format">
+        <ee:message>
+          <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var msg = payload
+---
+{
+  globalId: null,
+  cardNumber: msg.cardNumber,
+  cardType: msg.cardType,
+  cardNetwork: msg.cardNetwork,
+  status: msg.status default "Active",
+  creditLimit: msg.creditLimit default 0.00,
+  externalIds: [{
+    system: "Salesforce",
+    value: msg.cardId
+  }]
+}]]></ee:set-payload>
+        </ee:message>
+      </ee:transform>
+
+      <http:request method="POST" config-ref="Global_Financial_Account_System_API_Config" path="/api/global/accounts/cards" doc:name="Upsert Card to Global Data">
+        <http:body><![CDATA[#[payload]]]></http:body>
+      </http:request>
+
+      <http:request method="POST" config-ref="Salesforce_Financial_System_API_Config" path="/api/salesforce/financial/cards" doc:name="Upsert Card to Salesforce">
+        <http:body><![CDATA[#[payload]]]></http:body>
+      </http:request>
+
+      <ee:transform doc:name="Extract Card ID for Credit Card System">
+        <ee:variables>
+          <ee:set-variable variableName="cardId"><![CDATA[#[payload.externalIds[0].value default payload.cardNumber]]]></ee:set-variable>
+        </ee:variables>
+      </ee:transform>
+      <http:request method="PUT" config-ref="Credit_Card_System_API_Config" path="/api/creditcards/cards/{cardId}" doc:name="Update Card in Credit Card System">
+        <http:uri-params><![CDATA[#[{cardId: vars.cardId}]]]></http:uri-params>
+        <http:body><![CDATA[#[payload]]]></http:body>
+      </http:request>
+
+      <logger level="INFO" message="Successfully processed card update from MQ" doc:name="Log Success"/>
+
+      <error-handler>
+        <on-error-continue type="ANYPOINT-MQ:CONSUME,HTTP:REQUEST" enableNotifications="true" logException="true" doc:name="Continue on Error">
+          <logger level="ERROR" message="Error processing card update from MQ: #[error.description]" doc:name="Log Error"/>
+        </on-error-continue>
+      </error-handler>
+    </try>
   </flow>
 
 </mule>
