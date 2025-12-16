@@ -1,0 +1,86 @@
+#%RAML 1.0
+title: Bank Accounts Process API
+version: 1.0.0
+baseUri: http://localhost:8082/api/process/accounts
+mediaType: application/json
+
+documentation:
+  - title: Overview
+    content: API de processus pour orchestrer la vue financière agrégée (comptes + cartes)
+
+types:
+  FinancialAccount:
+    type: object
+    properties:
+      id?: string
+      globalId?: string
+      accountNumber: string
+      accountType: string
+      balance?: number
+      status?: string
+  FinancialCard:
+    type: object
+    properties:
+      id?: string
+      globalId?: string
+      cardNumber: string
+      cardType: string
+      status?: string
+      creditLimit?: number
+  FinancialSummary:
+    type: object
+    properties:
+      customerGlobalId: string
+      accounts:
+        type: array
+        items: FinancialAccount
+      cards:
+        type: array
+        items: FinancialCard
+      totalBalance?: number
+  ErrorResponse:
+    type: object
+    properties:
+      error:
+        type: object
+        properties:
+          code: string
+          message: string
+
+/accounts:
+  displayName: Financial Summary
+  description: Opérations pour récupérer les résumés financiers
+  
+  get:
+    displayName: Get Financial Summary
+    queryParameters:
+      customerGlobalId:
+        type: string
+        required: true
+    responses:
+      200:
+        body:
+          application/json:
+            type: FinancialSummary
+      400:
+        body:
+          application/json:
+            type: ErrorResponse
+
+  /{accountGlobalId}:
+    displayName: Account by Global ID
+    uriParameters:
+      accountGlobalId:
+        type: string
+    get:
+      displayName: Get Account Details
+      responses:
+        200:
+          body:
+            application/json:
+              type: FinancialAccount
+        404:
+          body:
+            application/json:
+              type: ErrorResponse
+
