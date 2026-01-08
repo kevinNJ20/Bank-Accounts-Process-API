@@ -13,7 +13,7 @@
   <!-- GET /accounts - Business Logic Flow -->
   <flow name="get-financial-summary-business-logic" doc:name="get-financial-summary-business-logic">
     <try doc:name="Try">
-      <parallel doc:name="Parallel">
+      <ee:parallel doc:name="Parallel">
         <http:request method="GET" config-ref="Global_Financial_Account_System_API_Config" path="/api/global/accounts" doc:name="Get Accounts from Global Data">
           <http:query-params><![CDATA[#[{
             "customerGlobalId": vars.customerGlobalId
@@ -25,9 +25,8 @@
             "customerId": vars.customerGlobalId
           }]]]></http:query-params>
         </http:request>
-      </parallel>
-
-      <ee:transform doc:name="Aggregate Financial Summary">
+      </ee:parallel>
+			<ee:transform doc:name="Aggregate Financial Summary">
         <ee:message>
           <ee:set-payload><![CDATA[%dw 2.0
 output application/json
