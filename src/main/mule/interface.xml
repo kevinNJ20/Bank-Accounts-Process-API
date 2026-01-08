@@ -117,7 +117,7 @@ output application/json
   </flow>
 
   <!-- GET /accounts/{accountGlobalId} -->
-  <flow name="get:\accounts\{accountGlobalId}:bank-accounts-process-api-config">
+  <flow name="get:\accounts\(accountGlobalId):bank-accounts-process-api-config">
     <set-variable value="#[attributes.uriParams.accountGlobalId]" variableName="accountGlobalId" doc:name="Set Account Global ID"/>
     <flow-ref name="get-account-details-business-logic" doc:name="get-account-details-business-logic"/>
   </flow>
