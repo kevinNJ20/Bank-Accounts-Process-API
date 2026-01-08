@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+<mule xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+  xmlns="http://www.mulesoft.org/schema/mule/core"
   xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:http="http://www.mulesoft.org/schema/mule/http"
   xmlns:anypoint-mq="http://www.mulesoft.org/schema/mule/anypoint-mq"
-  xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-  xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+  xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
   http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
   http://www.mulesoft.org/schema/mule/anypoint-mq http://www.mulesoft.org/schema/mule/anypoint-mq/current/mule-anypoint-mq.xsd
-  http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+  http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd">
   
   <!-- Configuration Properties -->
   <configuration-properties file="config.properties" doc:name="Configuration properties"/>
@@ -39,5 +40,7 @@
       clientSecret="${anypoint.mq.clientSecret}"
       url="${anypoint.mq.url}"/>
   </anypoint-mq:config>
+	<apikit:config outboundHeadersMapName="outboundHeadersMapName" httpStatusVarName="httpStatus" doc:name="Router" doc:id="e182af46-221f-4c2e-ac5e-64e6e519a300" name="bank-accounts-process-api-config" api="bank-accounts-process-api.raml" />
+
 
 </mule>
