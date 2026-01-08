@@ -285,7 +285,7 @@ output application/json
 
   <!-- MQ Listener: Consume Account Updates from Accounts Queue -->
   <flow name="consume-account-update-from-mq" doc:name="consume-account-update-from-mq">
-    <anypoint-mq:consume doc:name="Consume from Accounts Queue" config-ref="Anypoint_MQ_Config" destination="Accounts Queue">
+    <anypoint-mq:consume doc:name="Consume from Accounts Queue" config-ref="Anypoint_MQ_Config" destination="Accounts-Queue">
       <anypoint-mq:maximum-messages>1</anypoint-mq:maximum-messages>
     </anypoint-mq:consume>
     
@@ -333,7 +333,7 @@ var msg = payload
 
   <!-- MQ Listener: Consume Transaction Updates from Transactions Queue -->
   <flow name="consume-transaction-update-from-mq" doc:name="consume-transaction-update-from-mq">
-    <anypoint-mq:consume doc:name="Consume from Transactions Queue" config-ref="Anypoint_MQ_Config" destination="Transactions Queue">
+    <anypoint-mq:consume doc:name="Consume from Transactions Queue" config-ref="Anypoint_MQ_Config" destination="Transactions-Queue">
       <anypoint-mq:maximum-messages>1</anypoint-mq:maximum-messages>
     </anypoint-mq:consume>
     
@@ -383,7 +383,7 @@ var msg = payload
 
   <!-- MQ Listener: Consume Card Updates from Cards Queue -->
   <flow name="consume-card-update-from-mq" doc:name="consume-card-update-from-mq">
-    <anypoint-mq:consume doc:name="Consume from Cards Queue" config-ref="Anypoint_MQ_Config" destination="Cards Queue">
+    <anypoint-mq:consume doc:name="Consume from Cards Queue" config-ref="Anypoint_MQ_Config" destination="Cards-Queue">
       <anypoint-mq:maximum-messages>1</anypoint-mq:maximum-messages>
     </anypoint-mq:consume>
     
