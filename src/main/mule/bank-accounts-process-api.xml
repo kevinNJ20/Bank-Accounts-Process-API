@@ -106,17 +106,15 @@ output application/json
   </flow>
 
   <!-- GET /accounts/{accountGlobalId}/transactions - Get Account Transactions -->
-  <flow name="get-account-transactions-flow" doc:name="get-account-transactions-flow">
-    <http:listener doc:name="GET /accounts/{accountGlobalId}/transactions" config-ref="HTTP_Listener_config" path="/api/bank-accounts/accounts/{accountGlobalId}/transactions" allowedMethods="GET"/>
-    
+  <flow name="get-account-transactions-business-logic" doc:name="get-account-transactions-business-logic">
     <try doc:name="Try">
       <http:request method="GET" config-ref="Global_Financial_Account_System_API_Config" path="/api/global/accounts/transactions" doc:name="Get Transactions">
         <http:query-params><![CDATA[#[{
-          "accountGlobalId": attributes.uriParams.accountGlobalId,
-          "startDate": attributes.queryParams.startDate default null,
-          "endDate": attributes.queryParams.endDate default null,
-          "limit": attributes.queryParams.limit default "100",
-          "offset": attributes.queryParams.offset default "0"
+          "accountGlobalId": vars.accountGlobalId,
+          "startDate": vars.startDate default null,
+          "endDate": vars.endDate default null,
+          "limit": vars.limit default "100",
+          "offset": vars.offset default "0"
         }]]]></http:query-params>
       </http:request>
 
@@ -145,16 +143,14 @@ output application/json
   </flow>
 
   <!-- PUT /accounts/{accountGlobalId}/transactions/{transactionGlobalId} - Update Transaction (Dispute) -->
-  <flow name="update-transaction-dispute-flow" doc:name="update-transaction-dispute-flow">
-    <http:listener doc:name="PUT /accounts/{accountGlobalId}/transactions/{transactionGlobalId}" config-ref="HTTP_Listener_config" path="/api/bank-accounts/accounts/{accountGlobalId}/transactions/{transactionGlobalId}" allowedMethods="PUT"/>
-    
+  <flow name="update-transaction-dispute-business-logic" doc:name="update-transaction-dispute-business-logic">
     <ee:transform doc:name="Transform Request">
       <ee:message>
         <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
-  globalId: attributes.uriParams.transactionGlobalId,
+  globalId: vars.transactionGlobalId,
   disputeStatus: payload.disputeStatus,
   disputeReason: payload.disputeReason,
   status: "Disputed"
@@ -192,13 +188,11 @@ output application/json
   </flow>
 
   <!-- GET /cards - Get Credit Cards -->
-  <flow name="get-credit-cards-flow" doc:name="get-credit-cards-flow">
-    <http:listener doc:name="GET /cards" config-ref="HTTP_Listener_config" path="/api/bank-accounts/cards" allowedMethods="GET"/>
-    
+  <flow name="get-credit-cards-business-logic" doc:name="get-credit-cards-business-logic">
     <try doc:name="Try">
       <http:request method="GET" config-ref="Credit_Card_System_API_Config" path="/api/creditcards/cards" doc:name="Get Credit Cards">
         <http:query-params><![CDATA[#[{
-          "customerId": attributes.queryParams.customerGlobalId
+          "customerId": vars.customerGlobalId
         }]]]></http:query-params>
       </http:request>
 
@@ -227,15 +221,13 @@ output application/json
   </flow>
 
   <!-- PUT /cards/{cardGlobalId} - Update Card Controls -->
-  <flow name="update-card-controls-flow" doc:name="update-card-controls-flow">
-    <http:listener doc:name="PUT /cards/{cardGlobalId}" config-ref="HTTP_Listener_config" path="/api/bank-accounts/cards/{cardGlobalId}" allowedMethods="PUT"/>
-    
+  <flow name="update-card-controls-business-logic" doc:name="update-card-controls-business-logic">
     <try doc:name="Try">
       <http:request method="PUT" config-ref="Credit_Card_System_API_Config" path="/api/creditcards/cards/{cardGlobalId}" doc:name="Update Card">
 				<http:uri-params ><![CDATA[#[output application/java
 ---
 {
-	"cardGlobalId" : attributes.uriParams.cardGlobalId
+	"cardGlobalId" : vars.cardGlobalId
 }]]]></http:uri-params>
 
       </http:request>
@@ -265,9 +257,7 @@ output application/json
   </flow>
 
   <!-- POST /sync - Trigger Sync -->
-  <flow name="trigger-sync-flow" doc:name="trigger-sync-flow">
-    <http:listener doc:name="POST /sync" config-ref="HTTP_Listener_config" path="/api/bank-accounts/sync" allowedMethods="POST"/>
-    
+  <flow name="trigger-sync-business-logic" doc:name="trigger-sync-business-logic">
     <ee:transform doc:name="Transform Response">
       <ee:message>
         <ee:set-payload><![CDATA[%dw 2.0

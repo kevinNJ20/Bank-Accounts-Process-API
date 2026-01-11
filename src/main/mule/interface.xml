@@ -15,8 +15,15 @@ http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/m
 
   <!-- Main HTTP Listener with APIkit Router -->
   <flow name="main">
-    <http:listener config-ref="HTTP_Listener_config" path="/api/*" doc:name="HTTP Listener"/>
-		<apikit:router doc:name="APIkit Router" doc:id="be803a23-809f-4673-997a-b0a9c526efdc" config-ref="bank-accounts-process-api-config"/>
+    <http:listener config-ref="HTTP_Listener_config" path="/api/*" doc:name="HTTP Listener">
+			<http:response statusCode="#[vars.httpStatus default 200]">
+				<http:headers ><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+			</http:response>
+			<http:error-response statusCode="#[vars.httpStatus default 500]" >
+				<http:headers ><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+			</http:error-response>
+		</http:listener>
+		<apikit:router doc:name="APIkit Router" doc:id="47b05b62-c830-4fb1-966e-fd0631b75466" config-ref="bank-accounts-process-api-config"/>
 		<error-handler>
       <on-error-propagate type="APIKIT:NOT_FOUND" enableNotifications="true" logException="true" doc:name="On Error Propagate">
         <ee:transform doc:name="Transform Error Response">
@@ -117,6 +124,104 @@ output application/json
     <set-variable value="#[attributes.uriParams.accountGlobalId]" variableName="accountGlobalId" doc:name="Set Account Global ID"/>
     <flow-ref name="get-account-details-business-logic" doc:name="get-account-details-business-logic"/>
   </flow>
+	<flow name="console" doc:id="66c86335-fcdd-46a5-9ace-c8afcb9ea83f" >
+		<http:listener doc:name="HTTP Listener" doc:id="0a42d4e1-5445-40bf-8611-180e79254e34" config-ref="HTTP_Listener_config" path="/console/*" >
+			<http:response statusCode="#[vars.httpStatus default 200]" >
+				<http:headers ><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+			</http:response>
+			<http:error-response statusCode="#[vars.httpStatus default 500]" >
+				<http:headers ><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+			</http:error-response>
+		</http:listener>
+		<apikit:console doc:name="APIkit Console" doc:id="93312bb8-5172-4410-9f8a-4a6957a59f02" config-ref="bank-accounts-process-api-config"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="888ae8e7-faf8-4444-b05c-adcbfa28a713" type="APIKIT:NOT_FOUND" >
+				<ee:transform doc:name="Transform Error Response" doc:id="f4b2e13b-41c6-4d8d-836f-256099d7d69e" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  error: {
+    code: "NOT_FOUND",
+    message: "Resource not found",
+    timestamp: now()
+  }
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-variable value="404" doc:name="httpStatus" doc:id="d2322353-6e0c-4c7c-a8ea-c98a0ed1bd42" variableName="httpStatus" />
+			</on-error-propagate>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate1" doc:id="4ad9c73c-4a73-4352-bc04-b9bfe84c7b47" type="APIKIT:BAD_REQUEST" >
+				<ee:transform doc:name="Transform Error Response" doc:id="398606d0-ffae-460c-9188-a8ea6ef1ef0b" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  error: {
+    code: "BAD_REQUEST",
+    message: error.description default "Bad request",
+    timestamp: now()
+  }
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-variable value="400" doc:name="httpStatus" doc:id="223a9d66-b7f5-45ac-958b-19c0eede8250" variableName="httpStatus" />
+			</on-error-propagate>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate2" doc:id="96d8e329-f881-4d12-ae79-505c79d865f1" type="APIKIT:NOT_ACCEPTABLE" >
+				<ee:transform doc:name="Transform Error Response" doc:id="61cfc043-a91a-40a1-8691-b97edf174f1a" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  error: {
+    code: "NOT_ACCEPTABLE",
+    message: "Content type not acceptable",
+    timestamp: now()
+  }
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-variable value="406" doc:name="httpStatus" doc:id="424c09b6-ff6e-4d3f-a1cd-329a70f600f9" variableName="httpStatus" />
+			</on-error-propagate>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate3" doc:id="e45c4d16-4708-40aa-97df-486bbe67000d" type="APIKIT:UNSUPPORTED_MEDIA_TYPE" >
+				<ee:transform doc:name="Transform Error Response" doc:id="46ac810c-29d4-453e-8f9a-3d1929311114" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  error: {
+    code: "UNSUPPORTED_MEDIA_TYPE",
+    message: "Unsupported media type",
+    timestamp: now()
+  }
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-variable value="415" doc:name="httpStatus" doc:id="3202afc6-0c47-48c0-a380-e4234bc1bed0" variableName="httpStatus" />
+			</on-error-propagate>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate4" doc:id="327a9e12-8408-4e1d-b619-a7293785bd53" type="APIKIT:METHOD_NOT_ALLOWED" >
+				<ee:transform doc:name="Transform Error Response" doc:id="892c7c66-f770-4d2c-a492-992385535c9a" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  error: {
+    code: "METHOD_NOT_ALLOWED",
+    message: "Method not allowed",
+    timestamp: now()
+  }
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-variable value="405" doc:name="httpStatus" doc:id="291de1b4-6506-4e0e-8420-3edb08b9116e" variableName="httpStatus" />
+			</on-error-propagate>
+		</error-handler>
+	</flow>
 
 </mule>
 

@@ -16,7 +16,7 @@ http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/m
 
   <!-- HTTP Listener Configuration -->
   <http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config">
-    <http:listener-connection host="0.0.0.0" port="8082" />
+    <http:listener-connection host="${http.host}" port="${http.port}" />
   </http:listener-config>
 
   <!-- HTTP Request Configuration for System APIs -->
@@ -40,7 +40,7 @@ http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/m
       clientSecret="${anypoint.mq.clientSecret}"
       url="${anypoint.mq.url}"/>
   </anypoint-mq:config>
-	<apikit:config outboundHeadersMapName="outboundHeadersMapName" httpStatusVarName="httpStatus" doc:name="Router" doc:id="e182af46-221f-4c2e-ac5e-64e6e519a300" name="bank-accounts-process-api-config" api="bank-accounts-process-api.raml" />
+	<apikit:config outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" doc:name="Router" doc:id="e182af46-221f-4c2e-ac5e-64e6e519a300" name="bank-accounts-process-api-config" api="bank-accounts-process-api.raml" />
 
 
 </mule>
