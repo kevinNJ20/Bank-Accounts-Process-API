@@ -35,10 +35,6 @@
   <!-- Anypoint MQ Configuration -->
   <anypoint-mq:config name="Anypoint_MQ_Config" doc:name="Anypoint MQ Config">
     <anypoint-mq:connection url="${anypoint.mq.url}" clientId="${anypoint.mq.clientId}" clientSecret="${anypoint.mq.clientSecret}" />
-		<anypoint-mq:basic-connection 
-      clientId="${anypoint.mq.clientId}"
-      clientSecret="${anypoint.mq.clientSecret}"
-      url="${anypoint.mq.url}"/>
   </anypoint-mq:config>
 	<apikit:config outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" doc:name="Router" doc:id="e182af46-221f-4c2e-ac5e-64e6e519a300" name="bank-accounts-process-api-config" api="bank-accounts-process-api.raml" />
 

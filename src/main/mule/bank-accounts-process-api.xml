@@ -53,7 +53,7 @@ var creditCards = payload[1] default []
       <set-variable value="200" doc:name="httpStatus" doc:id="d3d4a356-1b30-4ea3-bf48-82e66c597694" variableName="httpStatus"/>
       
       <error-handler>
-        <on-error-propagate type="HTTP:REQUEST" enableNotifications="true" logException="true" doc:name="HTTP Error">
+        <on-error-propagate type="HTTP:CONNECTIVITY" enableNotifications="true" logException="true" doc:name="HTTP Error">
           <ee:transform doc:name="Transform Error">
             <ee:message>
               <ee:set-payload><![CDATA[%dw 2.0
@@ -121,7 +121,7 @@ output application/json
       <set-variable value="200" doc:name="httpStatus" doc:id="d3d4a356-1b30-4ea3-bf48-82e66c597694" variableName="httpStatus"/>
       
       <error-handler>
-        <on-error-propagate type="HTTP:REQUEST" enableNotifications="true" logException="true" doc:name="HTTP Error">
+        <on-error-propagate type="HTTP:CONNECTIVITY" enableNotifications="true" logException="true" doc:name="HTTP Error">
           <ee:transform doc:name="Transform Error">
             <ee:message>
               <ee:set-payload><![CDATA[%dw 2.0
@@ -166,7 +166,7 @@ output application/json
       <set-variable value="200" doc:name="httpStatus" doc:id="d3d4a356-1b30-4ea3-bf48-82e66c597694" variableName="httpStatus"/>
       
       <error-handler>
-        <on-error-propagate type="HTTP:REQUEST" enableNotifications="true" logException="true" doc:name="HTTP Error">
+        <on-error-propagate type="HTTP:CONNECTIVITY" enableNotifications="true" logException="true" doc:name="HTTP Error">
           <ee:transform doc:name="Transform Error">
             <ee:message>
               <ee:set-payload><![CDATA[%dw 2.0
@@ -199,7 +199,7 @@ output application/json
       <set-variable value="200" doc:name="httpStatus" doc:id="d3d4a356-1b30-4ea3-bf48-82e66c597694" variableName="httpStatus"/>
       
       <error-handler>
-        <on-error-propagate type="HTTP:REQUEST" enableNotifications="true" logException="true" doc:name="HTTP Error">
+        <on-error-propagate type="HTTP:CONNECTIVITY" enableNotifications="true" logException="true" doc:name="HTTP Error">
           <ee:transform doc:name="Transform Error">
             <ee:message>
               <ee:set-payload><![CDATA[%dw 2.0
@@ -235,7 +235,7 @@ output application/json
       <set-variable value="200" doc:name="httpStatus" doc:id="d3d4a356-1b30-4ea3-bf48-82e66c597694" variableName="httpStatus"/>
       
       <error-handler>
-        <on-error-propagate type="HTTP:REQUEST" enableNotifications="true" logException="true" doc:name="HTTP Error">
+        <on-error-propagate type="HTTP:CONNECTIVITY" enableNotifications="true" logException="true" doc:name="HTTP Error">
           <ee:transform doc:name="Transform Error">
             <ee:message>
               <ee:set-payload><![CDATA[%dw 2.0
@@ -275,11 +275,9 @@ output application/json
 
   <!-- MQ Listener: Consume Account Updates from Accounts Queue -->
   <flow name="consume-account-update-from-mq" doc:name="consume-account-update-from-mq">
-    <anypoint-mq:consume doc:name="Consume from Accounts Queue" config-ref="Anypoint_MQ_Config" destination="Accounts-Queue">
-      <anypoint-mq:maximum-messages>1</anypoint-mq:maximum-messages>
-    </anypoint-mq:consume>
     
-    <logger level="INFO" message="Received account update from MQ: #[payload]" doc:name="Log Account Update"/>
+    <anypoint-mq:consume doc:name="Consume from Accounts Queue" doc:id="ead79a6a-c3af-40a8-b1ae-8484b1d1f1e8" config-ref="Anypoint_MQ_Config" destination="Accounts-Queue"/>
+		<logger level="INFO" message="Received account update from MQ: #[payload]" doc:name="Log Account Update"/>
     
     <try doc:name="Try">
       <ee:transform doc:name="Transform MQ Message to Account Format">
@@ -314,7 +312,7 @@ var msg = payload
       <logger level="INFO" message="Successfully processed account update from MQ" doc:name="Log Success"/>
 
       <error-handler>
-        <on-error-continue type="ANYPOINT-MQ:CONSUME,HTTP:REQUEST" enableNotifications="true" logException="true" doc:name="Continue on Error">
+        <on-error-continue type="ANYPOINT-MQ:CONNECTIVITY,HTTP:CONNECTIVITY" enableNotifications="true" logException="true" doc:name="Continue on Error">
           <logger level="ERROR" message="Error processing account update from MQ: #[error.description]" doc:name="Log Error"/>
         </on-error-continue>
       </error-handler>
@@ -323,11 +321,9 @@ var msg = payload
 
   <!-- MQ Listener: Consume Transaction Updates from Transactions Queue -->
   <flow name="consume-transaction-update-from-mq" doc:name="consume-transaction-update-from-mq">
-    <anypoint-mq:consume doc:name="Consume from Transactions Queue" config-ref="Anypoint_MQ_Config" destination="Transactions-Queue">
-      <anypoint-mq:maximum-messages>1</anypoint-mq:maximum-messages>
-    </anypoint-mq:consume>
     
-    <logger level="INFO" message="Received transaction update from MQ: #[payload]" doc:name="Log Transaction Update"/>
+    <anypoint-mq:consume doc:name="Consume from Transactions Queue" doc:id="c112c25d-626d-4a0d-97e8-d29f2d4de4b8" config-ref="Anypoint_MQ_Config" destination="Transactions-Queue" />
+		<logger level="INFO" message="Received transaction update from MQ: #[payload]" doc:name="Log Transaction Update"/>
     
     <try doc:name="Try">
       <ee:transform doc:name="Transform MQ Message to Transaction Format">
@@ -364,20 +360,19 @@ var msg = payload
       <logger level="INFO" message="Successfully processed transaction update from MQ" doc:name="Log Success"/>
 
       <error-handler>
-        <on-error-continue type="ANYPOINT-MQ:CONSUME,HTTP:REQUEST" enableNotifications="true" logException="true" doc:name="Continue on Error">
+        <on-error-continue type="ANYPOINT-MQ:CONNECTIVITY,HTTP:CONNECTIVITY" enableNotifications="true" logException="true" doc:name="Continue on Error">
           <logger level="ERROR" message="Error processing transaction update from MQ: #[error.description]" doc:name="Log Error"/>
         </on-error-continue>
       </error-handler>
     </try>
-  </flow>
+  
+</flow>
 
   <!-- MQ Listener: Consume Card Updates from Cards Queue -->
   <flow name="consume-card-update-from-mq" doc:name="consume-card-update-from-mq">
-    <anypoint-mq:consume doc:name="Consume from Cards Queue" config-ref="Anypoint_MQ_Config" destination="Cards-Queue">
-      <anypoint-mq:maximum-messages>1</anypoint-mq:maximum-messages>
-    </anypoint-mq:consume>
     
-    <logger level="INFO" message="Received card update from MQ: #[payload]" doc:name="Log Card Update"/>
+    <anypoint-mq:consume doc:name="Consume from Cards Queue" doc:id="4ec6145a-eb71-4133-a622-ffc8b1111bd7" config-ref="Anypoint_MQ_Config" destination="Cards-Queue" />
+		<logger level="INFO" message="Received card update from MQ: #[payload]" doc:name="Log Card Update"/>
     
     <try doc:name="Try">
       <ee:transform doc:name="Transform MQ Message to Card Format">
@@ -423,11 +418,12 @@ var msg = payload
       <logger level="INFO" message="Successfully processed card update from MQ" doc:name="Log Success"/>
 
       <error-handler>
-        <on-error-continue type="ANYPOINT-MQ:CONSUME,HTTP:REQUEST" enableNotifications="true" logException="true" doc:name="Continue on Error">
+        <on-error-continue type="ANYPOINT-MQ:CONNECTIVITY,HTTP:CONNECTIVITY" enableNotifications="true" logException="true" doc:name="Continue on Error">
           <logger level="ERROR" message="Error processing card update from MQ: #[error.description]" doc:name="Log Error"/>
         </on-error-continue>
       </error-handler>
     </try>
-  </flow>
+  
+</flow>
 
 </mule>
