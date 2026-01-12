@@ -15,7 +15,7 @@
     <try doc:name="Try">
 			<scatter-gather doc:name="Scatter-Gather" doc:id="b7d2bb7e-1628-451d-830b-7dd8dcca4034" >
 				<route >
-					<http:request doc:name="Get Accounts from Global Data" doc:id="209b1ec3-c79a-4794-9616-cb935f2a534b" config-ref="Global_Financial_Account_System_API_Config" path="/api/global/accounts">
+					<http:request doc:name="Get Accounts from Global Data" doc:id="209b1ec3-c79a-4794-9616-cb935f2a534b" config-ref="Global_Financial_Account_System_API_Config" path="/api/accounts">
 						<http:query-params ><![CDATA[#[output application/java
 ---
 {
@@ -24,7 +24,7 @@
 					</http:request>
 				</route>
 				<route >
-					<http:request doc:name="Get Credit Cards" doc:id="b8fbb0a9-aed8-4f17-9bb4-b3facb92285a" config-ref="Credit_Card_System_API_Config" path="/api/creditcards/cards">
+					<http:request doc:name="Get Credit Cards" doc:id="b8fbb0a9-aed8-4f17-9bb4-b3facb92285a" config-ref="Credit_Card_System_API_Config" path="/api/cards">
 						<http:query-params ><![CDATA[#[output application/java
 ---
 {
@@ -77,7 +77,7 @@ output application/json
   <!-- GET /accounts/{accountGlobalId} - Business Logic Flow -->
   <flow name="get-account-details-business-logic" doc:name="get-account-details-business-logic">
     <try doc:name="Try">
-      <http:request method="GET" config-ref="Global_Financial_Account_System_API_Config" path="/api/global/accounts/{accountGlobalId}" doc:name="Get Account from Global Data">
+      <http:request config-ref="Global_Financial_Account_System_API_Config" path="/api/accounts/{accountGlobalId}" doc:name="Get Account from Global Data">
         <http:uri-params><![CDATA[#[{accountGlobalId: vars.accountGlobalId}]]]></http:uri-params>
       </http:request>
 
@@ -108,7 +108,7 @@ output application/json
   <!-- GET /accounts/{accountGlobalId}/transactions - Get Account Transactions -->
   <flow name="get-account-transactions-business-logic" doc:name="get-account-transactions-business-logic">
     <try doc:name="Try">
-      <http:request method="GET" config-ref="Global_Financial_Account_System_API_Config" path="/api/global/accounts/transactions" doc:name="Get Transactions">
+      <http:request config-ref="Global_Financial_Account_System_API_Config" path="/api/accounts/transactions" doc:name="Get Transactions">
         <http:query-params><![CDATA[#[{
           "accountGlobalId": vars.accountGlobalId,
           "startDate": vars.startDate default null,
@@ -159,8 +159,7 @@ output application/json
     </ee:transform>
 
     <try doc:name="Try">
-      <http:request method="POST" config-ref="Global_Financial_Account_System_API_Config" path="/api/global/accounts/transactions" doc:name="Update Transaction">
-        <http:body><![CDATA[#[payload]]]></http:body>
+      <http:request method="POST" config-ref="Global_Financial_Account_System_API_Config" path="/api/accounts/transactions" doc:name="Update Transaction">
       </http:request>
 
       <set-variable value="200" doc:name="httpStatus" doc:id="d3d4a356-1b30-4ea3-bf48-82e66c597694" variableName="httpStatus"/>
@@ -190,7 +189,7 @@ output application/json
   <!-- GET /cards - Get Credit Cards -->
   <flow name="get-credit-cards-business-logic" doc:name="get-credit-cards-business-logic">
     <try doc:name="Try">
-      <http:request method="GET" config-ref="Credit_Card_System_API_Config" path="/api/creditcards/cards" doc:name="Get Credit Cards">
+      <http:request config-ref="Credit_Card_System_API_Config" path="/api/cards" doc:name="Get Credit Cards">
         <http:query-params><![CDATA[#[{
           "customerId": vars.customerGlobalId
         }]]]></http:query-params>
@@ -223,7 +222,7 @@ output application/json
   <!-- PUT /cards/{cardGlobalId} - Update Card Controls -->
   <flow name="update-card-controls-business-logic" doc:name="update-card-controls-business-logic">
     <try doc:name="Try">
-      <http:request method="PUT" config-ref="Credit_Card_System_API_Config" path="/api/creditcards/cards/{cardGlobalId}" doc:name="Update Card">
+      <http:request method="PUT" config-ref="Credit_Card_System_API_Config" path="/api/cards/{cardGlobalId}" doc:name="Update Card">
 				<http:uri-params ><![CDATA[#[output application/java
 ---
 {
@@ -301,12 +300,10 @@ var msg = payload
         </ee:message>
       </ee:transform>
 
-      <http:request method="POST" config-ref="Global_Financial_Account_System_API_Config" path="/api/global/accounts" doc:name="Upsert Account to Global Data">
-        <http:body><![CDATA[#[payload]]]></http:body>
+      <http:request method="POST" config-ref="Global_Financial_Account_System_API_Config" path="/api/accounts" doc:name="Upsert Account to Global Data">
       </http:request>
 
-      <http:request method="POST" config-ref="Salesforce_Financial_System_API_Config" path="/api/salesforce/financial/accounts" doc:name="Upsert Account to Salesforce">
-        <http:body><![CDATA[#[payload]]]></http:body>
+      <http:request method="POST" config-ref="Salesforce_Financial_System_API_Config" path="/api/accounts" doc:name="Upsert Account to Salesforce">
       </http:request>
 
       <logger level="INFO" message="Successfully processed account update from MQ" doc:name="Log Success"/>
@@ -349,12 +346,10 @@ var msg = payload
         </ee:message>
       </ee:transform>
 
-      <http:request method="POST" config-ref="Global_Financial_Account_System_API_Config" path="/api/global/accounts/transactions" doc:name="Upsert Transaction to Global Data">
-        <http:body><![CDATA[#[payload]]]></http:body>
+      <http:request method="POST" config-ref="Global_Financial_Account_System_API_Config" path="/api/accounts/transactions" doc:name="Upsert Transaction to Global Data">
       </http:request>
 
-      <http:request method="POST" config-ref="Salesforce_Financial_System_API_Config" path="/api/salesforce/financial/transactions" doc:name="Upsert Transaction to Salesforce">
-        <http:body><![CDATA[#[payload]]]></http:body>
+      <http:request method="POST" config-ref="Salesforce_Financial_System_API_Config" path="/api/transactions" doc:name="Upsert Transaction to Salesforce">
       </http:request>
 
       <logger level="INFO" message="Successfully processed transaction update from MQ" doc:name="Log Success"/>
@@ -396,12 +391,10 @@ var msg = payload
         </ee:message>
       </ee:transform>
 
-      <http:request method="POST" config-ref="Global_Financial_Account_System_API_Config" path="/api/global/accounts/cards" doc:name="Upsert Card to Global Data">
-        <http:body><![CDATA[#[payload]]]></http:body>
+      <http:request method="POST" config-ref="Global_Financial_Account_System_API_Config" path="/api/accounts/cards" doc:name="Upsert Card to Global Data">
       </http:request>
 
-      <http:request method="POST" config-ref="Salesforce_Financial_System_API_Config" path="/api/salesforce/financial/cards" doc:name="Upsert Card to Salesforce">
-        <http:body><![CDATA[#[payload]]]></http:body>
+      <http:request method="POST" config-ref="Salesforce_Financial_System_API_Config" path="/api/cards" doc:name="Upsert Card to Salesforce">
       </http:request>
 
       <ee:transform doc:name="Extract Card ID for Credit Card System">
@@ -409,7 +402,7 @@ var msg = payload
           <ee:set-variable variableName="cardId"><![CDATA[#[payload.externalIds[0].value default payload.cardNumber]]]></ee:set-variable>
         </ee:variables>
       </ee:transform>
-      <http:request method="PUT" config-ref="Credit_Card_System_API_Config" path="/api/creditcards/cards/{cardId}" doc:name="Update Card in Credit Card System">
+      <http:request method="PUT" config-ref="Credit_Card_System_API_Config" path="/api/cards/{cardId}" doc:name="Update Card in Credit Card System">
         <http:uri-params><![CDATA[#[output application/java
 ---
 {cardId: vars.cardId}]]]></http:uri-params>
