@@ -8,8 +8,7 @@
       xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
       http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
       http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/apikit/current/mule-apikit.xsd
-      http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
-http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd">
+      http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
 
   <!-- APIkit Router Configuration -->
 
@@ -23,7 +22,7 @@ http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/m
 				<http:headers ><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
 			</http:error-response>
 		</http:listener>
-		<apikit:router doc:name="APIkit Router" doc:id="06c52a51-e081-48fa-85f0-f58cd9eb2fd0" config-ref="bank-accounts-process-api-config"/>
+		<apikit:router doc:name="APIkit Router" doc:id="bf4dd9d7-78e3-4ad0-9444-56cf4fe36019" />
 		<error-handler>
       <on-error-propagate type="APIKIT:NOT_FOUND" enableNotifications="true" logException="true" doc:name="On Error Propagate">
         <ee:transform doc:name="Transform Error Response">
@@ -133,7 +132,7 @@ output application/json
 				<http:headers ><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
 			</http:error-response>
 		</http:listener>
-		<apikit:console doc:name="APIkit Console" doc:id="ac14d041-0079-4839-996f-c9d24246c86e" config-ref="bank-accounts-process-api-config"/>
+		<apikit:console doc:name="APIkit Console" doc:id="60acec9c-6b01-43f8-9d8f-20808175527a" />
 		<error-handler >
 			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="888ae8e7-faf8-4444-b05c-adcbfa28a713" type="APIKIT:NOT_FOUND" >
 				<ee:transform doc:name="Transform Error Response" doc:id="f4b2e13b-41c6-4d8d-836f-256099d7d69e" >
