@@ -107,15 +107,27 @@ output application/json
 
   <!-- GET /accounts/{accountGlobalId}/transactions - Get Account Transactions -->
   <flow name="get-account-transactions-business-logic" doc:name="get-account-transactions-business-logic">
+    <ee:transform doc:name="Build Query Parameters">
+      <ee:message>
+        <ee:set-payload><![CDATA[%dw 2.0
+output application/java
+
+var baseParams = {
+  "accountGlobalId": vars.accountGlobalId,
+  "limit": vars.limit default "100",
+  "offset": vars.offset default "0"
+}
+
+var dateParams = {}
+++ (if (vars.startDate != null and vars.startDate != "") {"startDate": vars.startDate as String} else {})
+++ (if (vars.endDate != null and vars.endDate != "") {"endDate": vars.endDate as String} else {})
+---
+baseParams ++ dateParams]]></ee:set-payload>
+      </ee:message>
+    </ee:transform>
     <try doc:name="Try">
       <http:request config-ref="Global_Financial_Account_System_API_Config" path="/api/accounts/transactions" doc:name="Get Transactions">
-        <http:query-params><![CDATA[#[{
-          "accountGlobalId": vars.accountGlobalId,
-          "startDate": vars.startDate default null,
-          "endDate": vars.endDate default null,
-          "limit": vars.limit default "100",
-          "offset": vars.offset default "0"
-        }]]]></http:query-params>
+        <http:query-params><![CDATA[#[payload]]]></http:query-params>
       </http:request>
 
       <set-variable value="200" doc:name="httpStatus" doc:id="d3d4a356-1b30-4ea3-bf48-82e66c597694" variableName="httpStatus"/>

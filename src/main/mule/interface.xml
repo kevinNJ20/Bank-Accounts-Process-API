@@ -123,6 +123,23 @@ output application/json
     <set-variable value="#[attributes.uriParams.accountGlobalId]" variableName="accountGlobalId" doc:name="Set Account Global ID"/>
     <flow-ref name="get-account-details-business-logic" doc:name="get-account-details-business-logic"/>
   </flow>
+
+  <!-- GET /accounts/{accountGlobalId}/transactions -->
+  <flow name="get:\accounts\(accountGlobalId)\transactions:bank-accounts-process-api-config">
+    <set-variable value="#[attributes.uriParams.accountGlobalId]" variableName="accountGlobalId" doc:name="Set Account Global ID"/>
+    <set-variable value="#[attributes.queryParams.limit default '100']" variableName="limit" doc:name="Set Limit"/>
+    <set-variable value="#[attributes.queryParams.offset default '0']" variableName="offset" doc:name="Set Offset"/>
+    <set-variable value="#[attributes.queryParams.startDate default null]" variableName="startDate" doc:name="Set Start Date"/>
+    <set-variable value="#[attributes.queryParams.endDate default null]" variableName="endDate" doc:name="Set End Date"/>
+    <flow-ref name="get-account-transactions-business-logic" doc:name="get-account-transactions-business-logic"/>
+  </flow>
+
+  <!-- PUT /accounts/{accountGlobalId}/transactions/{transactionGlobalId} -->
+  <flow name="put:\accounts\(accountGlobalId)\transactions\(transactionGlobalId):application\json:bank-accounts-process-api-config">
+    <set-variable value="#[attributes.uriParams.accountGlobalId]" variableName="accountGlobalId" doc:name="Set Account Global ID"/>
+    <set-variable value="#[attributes.uriParams.transactionGlobalId]" variableName="transactionGlobalId" doc:name="Set Transaction Global ID"/>
+    <flow-ref name="update-transaction-dispute-business-logic" doc:name="update-transaction-dispute-business-logic"/>
+  </flow>
 	<flow name="console" doc:id="66c86335-fcdd-46a5-9ace-c8afcb9ea83f" >
 		<http:listener doc:name="HTTP Listener" doc:id="0a42d4e1-5445-40bf-8611-180e79254e34" config-ref="HTTP_Listener_config" path="/console/*" >
 			<http:response statusCode="#[vars.httpStatus default 200]" >

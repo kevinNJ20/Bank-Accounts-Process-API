@@ -84,3 +84,59 @@ types:
             application/json:
               type: ErrorResponse
 
+    /transactions:
+      displayName: Account Transactions
+      get:
+        displayName: Get Account Transactions
+        queryParameters:
+          limit?:
+            type: integer
+            default: 100
+          offset?:
+            type: integer
+            default: 0
+          startDate?:
+            type: datetime
+          endDate?:
+            type: datetime
+        responses:
+          200:
+            body:
+              application/json:
+                type: object[]
+          400:
+            body:
+              application/json:
+                type: ErrorResponse
+          404:
+            body:
+              application/json:
+                type: ErrorResponse
+
+      /{transactionGlobalId}:
+        displayName: Transaction by Global ID
+        uriParameters:
+          transactionGlobalId:
+            type: string
+        put:
+          displayName: Update Transaction (Dispute)
+          body:
+            application/json:
+              type: object
+              properties:
+                disputeStatus?: string
+                disputeReason?: string
+          responses:
+            200:
+              body:
+                application/json:
+                  type: object
+            400:
+              body:
+                application/json:
+                  type: ErrorResponse
+            404:
+              body:
+                application/json:
+                  type: ErrorResponse
+
