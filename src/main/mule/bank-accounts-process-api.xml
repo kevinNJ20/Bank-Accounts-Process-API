@@ -156,21 +156,49 @@ output application/json
 
   <!-- PUT /accounts/{accountGlobalId}/transactions/{transactionGlobalId} - Update Transaction (Dispute) -->
   <flow name="update-transaction-dispute-business-logic" doc:name="update-transaction-dispute-business-logic">
-    <ee:transform doc:name="Transform Request">
-      <ee:message>
-        <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  globalId: vars.transactionGlobalId,
-  disputeStatus: payload.disputeStatus,
-  disputeReason: payload.disputeReason,
-  status: "Disputed"
-}]]></ee:set-payload>
-      </ee:message>
-    </ee:transform>
-
+    <set-variable value="#[payload]" variableName="disputeRequest" doc:name="Save Dispute Request"/>
+    
     <try doc:name="Try">
+      <!-- First, get the existing transaction -->
+      <http:request method="GET" config-ref="Global_Financial_Account_System_API_Config" path="/api/accounts/transactions" doc:name="Get Existing Transaction">
+        <http:query-params><![CDATA[#[{
+          accountGlobalId: vars.accountGlobalId
+        }]]]></http:query-params>
+      </http:request>
+
+      <ee:transform doc:name="Find and Update Transaction">
+        <ee:message>
+          <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var transactions = payload default []
+var existingTransaction = transactions[?($.globalId == vars.transactionGlobalId)][0] default null
+var disputeRequest = vars.disputeRequest default {}
+var disputeStatus = disputeRequest.disputeStatus default "PENDING"
+var disputeReason = disputeRequest.disputeReason default ""
+---
+if (existingTransaction != null)
+  existingTransaction update {
+    case .status -> "Disputed"
+    case .disputeStatus -> disputeStatus
+    case .disputeReason -> disputeReason
+  }
+else {
+  // If transaction not found, create minimal transaction for dispute
+  globalId: vars.transactionGlobalId,
+  transactionNumber: "DISPUTE-" ++ vars.transactionGlobalId,
+  accountGlobalId: vars.accountGlobalId,
+  transactionType: "Dispute",
+  amount: 0.00,
+  currency: "USD",
+  transactionDate: now(),
+  description: "Transaction dispute",
+  status: "Disputed",
+  disputeStatus: disputeStatus,
+  disputeReason: disputeReason
+}]]></ee:set-payload>
+        </ee:message>
+      </ee:transform>
+
       <http:request method="POST" config-ref="Global_Financial_Account_System_API_Config" path="/api/accounts/transactions" doc:name="Update Transaction">
       </http:request>
 
@@ -233,14 +261,49 @@ output application/json
 
   <!-- PUT /cards/{cardGlobalId} - Update Card Controls -->
   <flow name="update-card-controls-business-logic" doc:name="update-card-controls-business-logic">
+    <set-variable value="#[payload]" variableName="cardControlsRequest" doc:name="Save Card Controls Request"/>
+    
     <try doc:name="Try">
-      <http:request method="PUT" config-ref="Credit_Card_System_API_Config" path="/api/cards/{cardGlobalId}" doc:name="Update Card">
+      <!-- First, get the existing card - use cardGlobalId as cardId for credit-card-system-api -->
+      <http:request method="GET" config-ref="Credit_Card_System_API_Config" path="/api/cards/{cardId}" doc:name="Get Existing Card">
+        <http:uri-params><![CDATA[#[output application/java
+---
+{
+  "cardId": vars.cardGlobalId
+}]]]></http:uri-params>
+      </http:request>
+
+      <ee:transform doc:name="Merge Card Controls">
+        <ee:message>
+          <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var existingCard = payload default {}
+var controlsRequest = vars.cardControlsRequest default {}
+var existingControls = existingCard.controls default {}
+var newControls = if (controlsRequest.controls != null) {
+  dailyPurchaseLimit: controlsRequest.controls.dailyPurchaseLimit default existingControls.dailyPurchaseLimit default null,
+  dailyATMWithdrawalLimit: controlsRequest.controls.dailyATMWithdrawalLimit default existingControls.dailyATMWithdrawalLimit default null,
+  internationalTransactionsEnabled: controlsRequest.controls.internationalTransactionsEnabled default existingControls.internationalTransactionsEnabled default null,
+  onlineTransactionsEnabled: controlsRequest.controls.onlineTransactionsEnabled default existingControls.onlineTransactionsEnabled default null
+} else existingControls
+var mergedCard = existingCard update {
+  case .status -> controlsRequest.status default existingCard.status
+  case .creditLimit -> controlsRequest.creditLimit default existingCard.creditLimit
+  case .availableCredit -> controlsRequest.availableCredit default existingCard.availableCredit
+  case .controls -> newControls
+}
+---
+// Filtrer les champs null pour éviter les erreurs de validation RAML
+mergedCard filterObject ((value, key) -> value != null)]]></ee:set-payload>
+        </ee:message>
+      </ee:transform>
+
+      <http:request method="PUT" config-ref="Credit_Card_System_API_Config" path="/api/cards/{cardId}" doc:name="Update Card">
 				<http:uri-params ><![CDATA[#[output application/java
 ---
 {
-	"cardGlobalId" : vars.cardGlobalId
+	"cardId" : vars.cardGlobalId
 }]]]></http:uri-params>
-
       </http:request>
 
       <set-variable value="200" doc:name="httpStatus" doc:id="d3d4a356-1b30-4ea3-bf48-82e66c597694" variableName="httpStatus"/>

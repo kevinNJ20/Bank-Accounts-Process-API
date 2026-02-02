@@ -42,6 +42,7 @@ output application/json
         <set-variable value="404" doc:name="httpStatus" doc:id="d3d4a356-1b30-4ea3-bf48-82e66c597694" variableName="httpStatus"/>
       </on-error-propagate>
       <on-error-propagate type="APIKIT:BAD_REQUEST" enableNotifications="true" logException="true" doc:name="On Error Propagate">
+        <logger level="ERROR" message="APIKIT:BAD_REQUEST - Method: #[attributes.method], Path: #[attributes.requestPath], URI Params: #[attributes.uriParams], Query Params: #[attributes.queryParams], Error: #[error.description]" doc:name="Log Error Details"/>
         <ee:transform doc:name="Transform Error Response">
           <ee:message>
             <ee:set-payload><![CDATA[%dw 2.0
@@ -134,11 +135,34 @@ output application/json
     <flow-ref name="get-account-transactions-business-logic" doc:name="get-account-transactions-business-logic"/>
   </flow>
 
+  <!-- GET /cards -->
+  <flow name="get:\cards:bank-accounts-process-api-config">
+    <set-variable value="#[attributes.queryParams.customerGlobalId]" variableName="customerGlobalId" doc:name="Set Customer Global ID"/>
+    <flow-ref name="get-credit-cards-business-logic" doc:name="get-credit-cards-business-logic"/>
+  </flow>
+
   <!-- PUT /accounts/{accountGlobalId}/transactions/{transactionGlobalId} -->
   <flow name="put:\accounts\(accountGlobalId)\transactions\(transactionGlobalId):application\json:bank-accounts-process-api-config">
     <set-variable value="#[attributes.uriParams.accountGlobalId]" variableName="accountGlobalId" doc:name="Set Account Global ID"/>
     <set-variable value="#[attributes.uriParams.transactionGlobalId]" variableName="transactionGlobalId" doc:name="Set Transaction Global ID"/>
     <flow-ref name="update-transaction-dispute-business-logic" doc:name="update-transaction-dispute-business-logic"/>
+  </flow>
+
+  <!-- PUT /cards/{cardGlobalId} -->
+  <flow name="put:\cards\(cardGlobalId):application\json:bank-accounts-process-api-config">
+    <set-variable value="#[attributes.uriParams.cardGlobalId]" variableName="cardGlobalId" doc:name="Set Card Global ID"/>
+    <ee:transform doc:name="Ensure Body is Object">
+      <ee:message>
+        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+if (payload != null and payload is Object) 
+  payload 
+else 
+  {}]]></ee:set-payload>
+      </ee:message>
+    </ee:transform>
+    <flow-ref name="update-card-controls-business-logic" doc:name="update-card-controls-business-logic"/>
   </flow>
 	<flow name="console" doc:id="66c86335-fcdd-46a5-9ace-c8afcb9ea83f" >
 		<http:listener doc:name="HTTP Listener" doc:id="0a42d4e1-5445-40bf-8611-180e79254e34" config-ref="HTTP_Listener_config" path="/console/*" >
