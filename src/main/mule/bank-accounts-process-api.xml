@@ -175,12 +175,21 @@ var existingTransaction = transactions[?($.globalId == vars.transactionGlobalId)
 var disputeRequest = vars.disputeRequest default {}
 var disputeStatus = disputeRequest.disputeStatus default "PENDING"
 var disputeReason = disputeRequest.disputeReason default ""
+
+// Function to ensure datetime has timezone
+fun ensureTimezone(dt) = 
+  if (dt == null) null
+  else if (dt is String and !(dt contains "Z") and !(dt contains "+")) 
+    dt ++ "Z"  // Add UTC timezone if missing
+  else dt
 ---
 if (existingTransaction != null)
   existingTransaction update {
     case .status -> "Disputed"
     case .disputeStatus -> disputeStatus
     case .disputeReason -> disputeReason
+    case .transactionDate -> ensureTimezone(existingTransaction.transactionDate)
+    case .valueDate -> ensureTimezone(existingTransaction.valueDate)
   }
 else {
   // If transaction not found, create minimal transaction for dispute
@@ -190,7 +199,7 @@ else {
   transactionType: "Dispute",
   amount: 0.00,
   currency: "USD",
-  transactionDate: now(),
+  transactionDate: now() as String {format: "yyyy-MM-dd'T'HH:mm:ss'Z'"},
   description: "Transaction dispute",
   status: "Disputed",
   disputeStatus: disputeStatus,
