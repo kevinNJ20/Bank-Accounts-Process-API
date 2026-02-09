@@ -1,7 +1,7 @@
 #%RAML 1.0
 title: Bank Accounts Process API
 version: 1.0.0
-baseUri: http://localhost:8082/api/process/accounts
+baseUri: http://localhost:8088/api
 mediaType: application/json
 
 documentation:
@@ -16,7 +16,10 @@ types:
       globalId?: string
       accountNumber: string
       accountType: string
+      accountName?: string
       balance?: number
+      availableBalance?: number
+      currency?: string
       status?: string
   FinancialCard:
     type: object
@@ -25,8 +28,10 @@ types:
       globalId?: string
       cardNumber: string
       cardType: string
+      cardNetwork?: string
       status?: string
       creditLimit?: number
+      availableCredit?: number
   FinancialSummary:
     type: object
     properties:
@@ -79,6 +84,127 @@ types:
           body:
             application/json:
               type: FinancialAccount
+        404:
+          body:
+            application/json:
+              type: ErrorResponse
+    
+    /transactions:
+      displayName: Account Transactions
+      get:
+        displayName: Get Account Transactions
+        queryParameters:
+          limit:
+            type: integer
+            required: false
+            default: 100
+          offset:
+            type: integer
+            required: false
+            default: 0
+          startDate:
+            type: string
+            required: false
+          endDate:
+            type: string
+            required: false
+        responses:
+          200:
+            body:
+              application/json:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    globalId?: string
+                    transactionNumber: string
+                    transactionType: string
+                    amount: number
+                    currency: string
+                    transactionDate: string
+                    description: string
+                    status: string
+          400:
+            body:
+              application/json:
+                type: ErrorResponse
+      
+      /{transactionGlobalId}:
+        displayName: Transaction by Global ID
+        uriParameters:
+          transactionGlobalId:
+            type: string
+        put:
+          displayName: Update Transaction (Dispute)
+          body:
+            application/json:
+              type: object
+              properties:
+                disputeStatus?: string
+                disputeReason?: string
+          responses:
+            200:
+              body:
+                application/json:
+                  type: object
+                  properties:
+                    globalId: string
+                    transactionNumber: string
+                    transactionType: string
+                    amount: number
+                    status: string
+                    disputeStatus?: string
+                    disputeReason?: string
+            404:
+              body:
+                application/json:
+                  type: ErrorResponse
+
+/cards:
+  displayName: Credit Cards
+  get:
+    displayName: Get Credit Cards
+    queryParameters:
+      customerGlobalId:
+        type: string
+        required: true
+    responses:
+      200:
+        body:
+          application/json:
+            type: array
+            items: FinancialCard
+      400:
+        body:
+          application/json:
+            type: ErrorResponse
+  
+  /{cardGlobalId}:
+    displayName: Card by Global ID
+    uriParameters:
+      cardGlobalId:
+        type: string
+    put:
+      displayName: Update Card Controls
+      body:
+        application/json:
+          type: object
+          properties:
+            status?: string
+            creditLimit?: number
+            availableCredit?: number
+            controls?:
+              type: object
+              properties:
+                dailyPurchaseLimit?: number
+                dailyATMWithdrawalLimit?: number
+                internationalTransactionsEnabled?: boolean
+                onlineTransactionsEnabled?: boolean
+      responses:
+        200:
+          body:
+            application/json:
+              type: FinancialCard
         404:
           body:
             application/json:

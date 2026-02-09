@@ -24,6 +24,10 @@
     <http:request-connection host="${global.financial.account.api.host}" port="${global.financial.account.api.port}" />
   </http:request-config>
 
+  <http:request-config name="Global_Party_System_API_Config" doc:name="Global Party System API Config">
+    <http:request-connection host="${global.party.api.host}" port="${global.party.api.port}" />
+  </http:request-config>
+
   <http:request-config name="Credit_Card_System_API_Config" doc:name="Credit Card System API Config">
     <http:request-connection host="${credit.card.api.host}" port="${credit.card.api.port}" />
   </http:request-config>

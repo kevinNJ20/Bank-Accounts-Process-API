@@ -24,11 +24,11 @@
 					</http:request>
 				</route>
 				<route >
-					<http:request doc:name="Get Credit Cards" doc:id="b8fbb0a9-aed8-4f17-9bb4-b3facb92285a" config-ref="Credit_Card_System_API_Config" path="/api/cards">
+					<http:request doc:name="Get Cards from Global Data" doc:id="b8fbb0a9-aed8-4f17-9bb4-b3facb92285a" config-ref="Global_Financial_Account_System_API_Config" path="/api/accounts/cards">
 						<http:query-params ><![CDATA[#[output application/java
 ---
 {
-	"customerId" :  vars.customerGlobalId
+	"customerGlobalId" :  vars.customerGlobalId
 }]]]></http:query-params>
 					</http:request>
 				</route>
@@ -37,15 +37,14 @@
         <ee:message>
           <ee:set-payload><![CDATA[%dw 2.0
 output application/json
-var accounts = payload[0] default []
-var creditCards = payload[1] default []
+var accounts = payload[0].payload default []
+var creditCards = payload[1].payload default []
 ---
 {
-  customer: {
-    globalId: vars.customerGlobalId
-  },
+  customerGlobalId: vars.customerGlobalId,
   accounts: accounts,
-  creditCards: creditCards
+  cards: creditCards,
+  totalBalance: (accounts map ($.balance default 0) reduce ($ + $$)) default 0
 }]]></ee:set-payload>
         </ee:message>
       </ee:transform>
@@ -273,12 +272,12 @@ output application/json
     <set-variable value="#[payload]" variableName="cardControlsRequest" doc:name="Save Card Controls Request"/>
     
     <try doc:name="Try">
-      <!-- First, get the existing card - use cardGlobalId as cardId for credit-card-system-api -->
-      <http:request method="GET" config-ref="Credit_Card_System_API_Config" path="/api/cards/{cardId}" doc:name="Get Existing Card">
+      <!-- First, get the existing card from Global Financial Account System API -->
+      <http:request method="GET" config-ref="Global_Financial_Account_System_API_Config" path="/api/accounts/cards/{cardGlobalId}" doc:name="Get Existing Card">
         <http:uri-params><![CDATA[#[output application/java
 ---
 {
-  "cardId": vars.cardGlobalId
+  "cardGlobalId": vars.cardGlobalId
 }]]]></http:uri-params>
       </http:request>
 
@@ -288,30 +287,33 @@ output application/json
 output application/json
 var existingCard = payload default {}
 var controlsRequest = vars.cardControlsRequest default {}
-var existingControls = existingCard.controls default {}
-var newControls = if (controlsRequest.controls != null) {
-  dailyPurchaseLimit: controlsRequest.controls.dailyPurchaseLimit default existingControls.dailyPurchaseLimit default null,
-  dailyATMWithdrawalLimit: controlsRequest.controls.dailyATMWithdrawalLimit default existingControls.dailyATMWithdrawalLimit default null,
-  internationalTransactionsEnabled: controlsRequest.controls.internationalTransactionsEnabled default existingControls.internationalTransactionsEnabled default null,
-  onlineTransactionsEnabled: controlsRequest.controls.onlineTransactionsEnabled default existingControls.onlineTransactionsEnabled default null
-} else existingControls
-var mergedCard = existingCard update {
-  case .status -> controlsRequest.status default existingCard.status
-  case .creditLimit -> controlsRequest.creditLimit default existingCard.creditLimit
-  case .availableCredit -> controlsRequest.availableCredit default existingCard.availableCredit
-  case .controls -> newControls
-}
 ---
-// Filtrer les champs null pour éviter les erreurs de validation RAML
-mergedCard filterObject ((value, key) -> value != null)]]></ee:set-payload>
+{
+  globalId: existingCard.globalId,
+  cardNumber: existingCard.cardNumber,
+  cardType: existingCard.cardType,
+  cardNetwork: existingCard.cardNetwork,
+  customerGlobalId: existingCard.customerGlobalId,
+  accountGlobalId: existingCard.accountGlobalId,
+  cardholderName: existingCard.cardholderName,
+  expirationDate: existingCard.expirationDate,
+  status: existingCard.status,
+  creditLimit: existingCard.creditLimit,
+  availableCredit: existingCard.availableCredit,
+  dailyPurchaseLimit: controlsRequest.dailyPurchaseLimit default existingCard.dailyPurchaseLimit,
+  dailyAtmWithdrawalLimit: controlsRequest.dailyAtmWithdrawalLimit default existingCard.dailyAtmWithdrawalLimit,
+  internationalTransactionsEnabled: controlsRequest.internationalTransactionsEnabled default existingCard.internationalTransactionsEnabled,
+  onlineTransactionsEnabled: controlsRequest.onlineTransactionsEnabled default existingCard.onlineTransactionsEnabled,
+  issuedDate: existingCard.issuedDate
+}]]></ee:set-payload>
         </ee:message>
       </ee:transform>
 
-      <http:request method="PUT" config-ref="Credit_Card_System_API_Config" path="/api/cards/{cardId}" doc:name="Update Card">
-				<http:uri-params ><![CDATA[#[output application/java
+      <http:request method="PUT" config-ref="Global_Financial_Account_System_API_Config" path="/api/accounts/cards/{cardGlobalId}" doc:name="Update Card">
+			<http:uri-params ><![CDATA[#[output application/java
 ---
 {
-	"cardId" : vars.cardGlobalId
+	"cardGlobalId" : vars.cardGlobalId
 }]]]></http:uri-params>
       </http:request>
 
