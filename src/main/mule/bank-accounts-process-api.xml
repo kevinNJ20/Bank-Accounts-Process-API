@@ -310,7 +310,7 @@ var controlsRequest = vars.cardControlsRequest default {}
       </ee:transform>
 
       <http:request method="PUT" config-ref="Global_Financial_Account_System_API_Config" path="/api/accounts/cards/{cardGlobalId}" doc:name="Update Card">
-			<http:uri-params ><![CDATA[#[output application/java
+				<http:uri-params ><![CDATA[#[output application/java
 ---
 {
 	"cardGlobalId" : vars.cardGlobalId
