@@ -13,6 +13,7 @@
   <!-- GET /accounts - Business Logic Flow -->
   <flow name="get-financial-summary-business-logic" doc:name="get-financial-summary-business-logic">
     <try doc:name="Try">
+      <logger level="INFO" message="#['GET financial summary - customerGlobalId: ' ++ (vars.customerGlobalId default 'n/a')]" doc:name="Log request"/>
 			<scatter-gather doc:name="Scatter-Gather" doc:id="b7d2bb7e-1628-451d-830b-7dd8dcca4034" >
 				<route >
 					<http:request doc:name="Get Accounts from Global Data" doc:id="209b1ec3-c79a-4794-9616-cb935f2a534b" config-ref="Global_Financial_Account_System_API_Config" path="/api/accounts">
@@ -49,10 +50,12 @@ var creditCards = payload[1].payload default []
         </ee:message>
       </ee:transform>
 
+      <logger level="INFO" message="#['GET financial summary success - customerGlobalId: ' ++ (vars.customerGlobalId default 'n/a') ++ ', accounts: ' ++ sizeOf(payload.accounts default []) ++ ', cards: ' ++ sizeOf(payload.cards default [])]" doc:name="Log success"/>
       <set-variable value="200" doc:name="httpStatus" doc:id="d3d4a356-1b30-4ea3-bf48-82e66c597694" variableName="httpStatus"/>
       
       <error-handler>
         <on-error-propagate type="HTTP:CONNECTIVITY" enableNotifications="true" logException="true" doc:name="HTTP Error">
+          <logger level="ERROR" message="#['GET financial summary failed - customerGlobalId: ' ++ (vars.customerGlobalId default 'n/a') ++ ', error: ' ++ (error.description default 'unknown')]" doc:name="Log error"/>
           <ee:transform doc:name="Transform Error">
             <ee:message>
               <ee:set-payload><![CDATA[%dw 2.0
@@ -76,14 +79,17 @@ output application/json
   <!-- GET /accounts/{accountGlobalId} - Business Logic Flow -->
   <flow name="get-account-details-business-logic" doc:name="get-account-details-business-logic">
     <try doc:name="Try">
+      <logger level="INFO" message="#['GET account details - accountGlobalId: ' ++ (vars.accountGlobalId default 'n/a')]" doc:name="Log request"/>
       <http:request config-ref="Global_Financial_Account_System_API_Config" path="/api/accounts/{accountGlobalId}" doc:name="Get Account from Global Data">
         <http:uri-params><![CDATA[#[{accountGlobalId: vars.accountGlobalId}]]]></http:uri-params>
       </http:request>
 
+      <logger level="INFO" message="#['GET account details success - accountGlobalId: ' ++ (vars.accountGlobalId default 'n/a')]" doc:name="Log success"/>
       <set-variable value="200" doc:name="httpStatus" doc:id="d3d4a356-1b30-4ea3-bf48-82e66c597694" variableName="httpStatus"/>
       
       <error-handler>
         <on-error-propagate type="HTTP:NOT_FOUND" enableNotifications="true" logException="true" doc:name="Not Found Error">
+          <logger level="WARN" message="#['GET account details not found - accountGlobalId: ' ++ (vars.accountGlobalId default 'n/a')]" doc:name="Log not found"/>
           <ee:transform doc:name="Transform Error">
             <ee:message>
               <ee:set-payload><![CDATA[%dw 2.0
@@ -106,6 +112,7 @@ output application/json
 
   <!-- GET /accounts/{accountGlobalId}/transactions - Get Account Transactions -->
   <flow name="get-account-transactions-business-logic" doc:name="get-account-transactions-business-logic">
+    <logger level="INFO" message="#['GET account transactions - accountGlobalId: ' ++ (vars.accountGlobalId default 'n/a') ++ ', limit: ' ++ (vars.limit default '100') ++ ', offset: ' ++ (vars.offset default '0')]" doc:name="Log request"/>
     <ee:transform doc:name="Build Query Parameters">
       <ee:message>
         <ee:set-payload><![CDATA[%dw 2.0
@@ -129,10 +136,12 @@ baseParams ++ dateParams]]></ee:set-payload>
         <http:query-params><![CDATA[#[payload]]]></http:query-params>
       </http:request>
 
+      <logger level="INFO" message="#['GET account transactions success - accountGlobalId: ' ++ (vars.accountGlobalId default 'n/a') ++ ', count: ' ++ (if (payload is Array) sizeOf(payload) else (if (payload is Object and payload.transactions != null) sizeOf(payload.transactions) else 0))]" doc:name="Log success"/>
       <set-variable value="200" doc:name="httpStatus" doc:id="d3d4a356-1b30-4ea3-bf48-82e66c597694" variableName="httpStatus"/>
       
       <error-handler>
         <on-error-propagate type="HTTP:CONNECTIVITY" enableNotifications="true" logException="true" doc:name="HTTP Error">
+          <logger level="ERROR" message="#['GET account transactions failed - accountGlobalId: ' ++ (vars.accountGlobalId default 'n/a') ++ ', error: ' ++ (error.description default 'unknown')]" doc:name="Log error"/>
           <ee:transform doc:name="Transform Error">
             <ee:message>
               <ee:set-payload><![CDATA[%dw 2.0
@@ -155,6 +164,7 @@ output application/json
 
   <!-- PUT /accounts/{accountGlobalId}/transactions/{transactionGlobalId} - Update Transaction (Dispute) -->
   <flow name="update-transaction-dispute-business-logic" doc:name="update-transaction-dispute-business-logic">
+    <logger level="INFO" message="#['PUT transaction dispute - accountGlobalId: ' ++ (vars.accountGlobalId default 'n/a') ++ ', transactionGlobalId: ' ++ (vars.transactionGlobalId default 'n/a') ++ ', disputeStatus: ' ++ (payload.disputeStatus default 'n/a')]" doc:name="Log request"/>
     <set-variable value="#[payload]" variableName="disputeRequest" doc:name="Save Dispute Request"/>
     
     <try doc:name="Try">
@@ -210,10 +220,12 @@ else {
       <http:request method="POST" config-ref="Global_Financial_Account_System_API_Config" path="/api/accounts/transactions" doc:name="Update Transaction">
       </http:request>
 
+      <logger level="INFO" message="#['PUT transaction dispute success - transactionGlobalId: ' ++ (vars.transactionGlobalId default 'n/a')]" doc:name="Log success"/>
       <set-variable value="200" doc:name="httpStatus" doc:id="d3d4a356-1b30-4ea3-bf48-82e66c597694" variableName="httpStatus"/>
       
       <error-handler>
         <on-error-propagate type="HTTP:CONNECTIVITY" enableNotifications="true" logException="true" doc:name="HTTP Error">
+          <logger level="ERROR" message="#['PUT transaction dispute failed - transactionGlobalId: ' ++ (vars.transactionGlobalId default 'n/a') ++ ', error: ' ++ (error.description default 'unknown')]" doc:name="Log error"/>
           <ee:transform doc:name="Transform Error">
             <ee:message>
               <ee:set-payload><![CDATA[%dw 2.0
@@ -237,16 +249,19 @@ output application/json
   <!-- GET /cards - Get Credit Cards -->
   <flow name="get-credit-cards-business-logic" doc:name="get-credit-cards-business-logic">
     <try doc:name="Try">
+      <logger level="INFO" message="#['GET credit cards - customerGlobalId: ' ++ (vars.customerGlobalId default 'n/a')]" doc:name="Log request"/>
       <http:request config-ref="Credit_Card_System_API_Config" path="/api/cards" doc:name="Get Credit Cards">
         <http:query-params><![CDATA[#[{
           "customerId": vars.customerGlobalId
         }]]]></http:query-params>
       </http:request>
 
+      <logger level="INFO" message="#['GET credit cards success - customerGlobalId: ' ++ (vars.customerGlobalId default 'n/a') ++ ', count: ' ++ (if (payload is Array) sizeOf(payload) else 0)]" doc:name="Log success"/>
       <set-variable value="200" doc:name="httpStatus" doc:id="d3d4a356-1b30-4ea3-bf48-82e66c597694" variableName="httpStatus"/>
       
       <error-handler>
         <on-error-propagate type="HTTP:CONNECTIVITY" enableNotifications="true" logException="true" doc:name="HTTP Error">
+          <logger level="ERROR" message="#['GET credit cards failed - customerGlobalId: ' ++ (vars.customerGlobalId default 'n/a') ++ ', error: ' ++ (error.description default 'unknown')]" doc:name="Log error"/>
           <ee:transform doc:name="Transform Error">
             <ee:message>
               <ee:set-payload><![CDATA[%dw 2.0
@@ -269,6 +284,7 @@ output application/json
 
   <!-- PUT /cards/{cardGlobalId} - Update Card Controls -->
   <flow name="update-card-controls-business-logic" doc:name="update-card-controls-business-logic">
+    <logger level="INFO" message="#['PUT card controls - cardGlobalId: ' ++ (vars.cardGlobalId default 'n/a')]" doc:name="Log request"/>
     <set-variable value="#[payload]" variableName="cardControlsRequest" doc:name="Save Card Controls Request"/>
     
     <try doc:name="Try">
@@ -317,10 +333,12 @@ var controlsRequest = vars.cardControlsRequest default {}
 }]]]></http:uri-params>
       </http:request>
 
+      <logger level="INFO" message="#['PUT card controls success - cardGlobalId: ' ++ (vars.cardGlobalId default 'n/a')]" doc:name="Log success"/>
       <set-variable value="200" doc:name="httpStatus" doc:id="d3d4a356-1b30-4ea3-bf48-82e66c597694" variableName="httpStatus"/>
       
       <error-handler>
         <on-error-propagate type="HTTP:CONNECTIVITY" enableNotifications="true" logException="true" doc:name="HTTP Error">
+          <logger level="ERROR" message="#['PUT card controls failed - cardGlobalId: ' ++ (vars.cardGlobalId default 'n/a') ++ ', error: ' ++ (error.description default 'unknown')]" doc:name="Log error"/>
           <ee:transform doc:name="Transform Error">
             <ee:message>
               <ee:set-payload><![CDATA[%dw 2.0
