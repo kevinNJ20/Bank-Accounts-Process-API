@@ -396,9 +396,9 @@ output application/json
 
   <!-- MQ Listener: Consume Account Updates from Accounts Queue -->
   <flow name="consume-account-update-from-mq" doc:name="consume-account-update-from-mq">
-    
-    <anypoint-mq:consume doc:name="Consume from Accounts Queue" doc:id="ead79a6a-c3af-40a8-b1ae-8484b1d1f1e8" config-ref="Anypoint_MQ_Config" destination="Accounts-Queue"/>
-		<logger level="INFO" message="Received account update from MQ: #[payload]" doc:name="Log Account Update"/>
+		<anypoint-mq:subscriber doc:name="Subscribe from Accounts Queue" doc:id="9b6df272-feba-4b0b-983a-83240751a216" config-ref="Anypoint_MQ_Config" destination="Accounts-Queue" />
+		<anypoint-mq:consume doc:name="Consume from Accounts Queue" doc:id="ead79a6a-c3af-40a8-b1ae-8484b1d1f1e8" config-ref="Anypoint_MQ_Config" destination="Accounts-Queue" />
+		<logger level="INFO" message='Received account update from MQ : #[payload]' doc:name="Log Account Update"/>
     
     <try doc:name="Try">
       <ee:transform doc:name="Transform MQ Message to Account Format">
@@ -408,7 +408,7 @@ output application/json
 var msg = payload
 ---
 {
-  globalId: null,
+  globalId: msg.accountId default null,
   accountNumber: msg.accountNumber,
   accountType: msg.accountType,
   accountName: msg.accountName,
@@ -432,16 +432,18 @@ var msg = payload
 
       <error-handler>
         <on-error-continue type="ANYPOINT-MQ:CONNECTIVITY,HTTP:CONNECTIVITY" enableNotifications="true" logException="true" doc:name="Continue on Error">
-          <logger level="ERROR" message="Error processing account update from MQ: #[error.description]" doc:name="Log Error"/>
+          <anypoint-mq:publish doc:name="Publish To DLQ" doc:id="e0922837-dac3-4773-970a-97a67602ecb3" config-ref="Anypoint_MQ_Config" destination="Accounts-DLQ"/>
+					<logger level="ERROR" message="Error processing account update from MQ: #[error.description]" doc:name="Log Error"/>
         </on-error-continue>
       </error-handler>
     </try>
   </flow>
 
   <!-- MQ Listener: Consume Transaction Updates from Transactions Queue -->
-  <flow name="consume-transaction-update-from-mq" doc:name="consume-transaction-update-from-mq">
+	<flow name="consume-transaction-update-from-mq" doc:name="consume-transaction-update-from-mq">
     
-    <anypoint-mq:consume doc:name="Consume from Transactions Queue" doc:id="c112c25d-626d-4a0d-97e8-d29f2d4de4b8" config-ref="Anypoint_MQ_Config" destination="Transactions-Queue" />
+    <anypoint-mq:subscriber doc:name="Subscribe from Transactions Queue" doc:id="f6137d55-19f0-4d5d-b0bc-136dcf854b96" config-ref="Anypoint_MQ_Config" destination="Transactions-Queue"/>
+		<anypoint-mq:consume doc:name="Consume from Transactions Queue" doc:id="c112c25d-626d-4a0d-97e8-d29f2d4de4b8" config-ref="Anypoint_MQ_Config" destination="Transactions-Queue" />
 		<logger level="INFO" message="Received transaction update from MQ: #[payload]" doc:name="Log Transaction Update"/>
     
     <try doc:name="Try">
@@ -478,8 +480,10 @@ var msg = payload
 
       <error-handler>
         <on-error-continue type="ANYPOINT-MQ:CONNECTIVITY,HTTP:CONNECTIVITY" enableNotifications="true" logException="true" doc:name="Continue on Error">
-          <logger level="ERROR" message="Error processing transaction update from MQ: #[error.description]" doc:name="Log Error"/>
-        </on-error-continue>
+          <anypoint-mq:publish doc:name="Publish To DLQ" doc:id="b63ad96e-ac32-4eab-977b-bbc03d3b92b6" config-ref="Anypoint_MQ_Config" destination="Transactions-DLQ" />
+					<logger level="ERROR" message="Error processing transaction update from MQ: #[error.description]" doc:name="Log Error"/>
+        
+</on-error-continue>
       </error-handler>
     </try>
   
@@ -488,7 +492,8 @@ var msg = payload
   <!-- MQ Listener: Consume Card Updates from Cards Queue -->
   <flow name="consume-card-update-from-mq" doc:name="consume-card-update-from-mq">
     
-    <anypoint-mq:consume doc:name="Consume from Cards Queue" doc:id="4ec6145a-eb71-4133-a622-ffc8b1111bd7" config-ref="Anypoint_MQ_Config" destination="Cards-Queue" />
+    <anypoint-mq:subscriber doc:name="Subscribe from Cards Queue" doc:id="aa4b66bc-f9df-4ca7-b016-f57e9ea72609" config-ref="Anypoint_MQ_Config" destination="Cards-Queue" />
+		<anypoint-mq:consume doc:name="Consume from Cards Queue" doc:id="4ec6145a-eb71-4133-a622-ffc8b1111bd7" config-ref="Anypoint_MQ_Config" destination="Cards-Queue" />
 		<logger level="INFO" message="Received card update from MQ: #[payload]" doc:name="Log Card Update"/>
     
     <try doc:name="Try">
@@ -534,8 +539,10 @@ var msg = payload
 
       <error-handler>
         <on-error-continue type="ANYPOINT-MQ:CONNECTIVITY,HTTP:CONNECTIVITY" enableNotifications="true" logException="true" doc:name="Continue on Error">
-          <logger level="ERROR" message="Error processing card update from MQ: #[error.description]" doc:name="Log Error"/>
-        </on-error-continue>
+          <anypoint-mq:publish doc:name="Publish To DLQ" doc:id="50f209bd-e8fe-47e2-80bd-530d54111921" config-ref="Anypoint_MQ_Config" destination="Cards-DLQ" />
+					<logger level="ERROR" message="Error processing card update from MQ: #[error.description]" doc:name="Log Error"/>
+        
+</on-error-continue>
       </error-handler>
     </try>
   
